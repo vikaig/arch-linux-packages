@@ -29,7 +29,6 @@ sha256sums=(
 )
 
 prepare() {
-    #cd "$srcdir"/$_modname-$pkgver
     sed 's@/usr/local@/usr@' -i "$srcdir"/$_modname-$pkgver/config
 }
 
