@@ -1,0 +1,47 @@
+# Maintainer: vikaig <vikaig99@gmail.com>
+
+pkgname=nginx-mainline-mod-link-function
+pkgver=3.2.3
+pkgrel=1
+
+_modname="nginx-${pkgname#nginx-mainline-mod-}"
+_nginxver=1.19.0
+pkgdesc="NGINX module that provides call the function of your application"
+arch=('x86_64')
+depends=('nginx-mainline')
+url="https://github.com/Taymindis/nginx-link-function"
+license=('BSD')
+
+source=(
+    https://nginx.org/download/nginx-$_nginxver.tar.gz{,.asc}
+    $_modname-$pkgver.tar.gz::https://github.com/Taymindis/$_modname/archive/$pkgver.tar.gz
+)
+
+
+validpgpkeys=(
+    'B0F4253373F8F6F510D42178520A9993A1C052F8' # Maxim Dounin <mdounin@mdounin.ru>
+)
+
+sha256sums=(
+    '44a616171fcd7d7ad7c6af3e6f3ad0879b54db5a5d21be874cd458b5691e36c8'
+    'SKIP'
+    '0b74d94896709aba21036ed6f9dfd63c9efc5b9921ee5892d28a4b03bd9b09bd'
+)
+
+prepare() {
+    #cd "$srcdir"/$_modname-$pkgver
+    sed 's@/usr/local@/usr@' -i "$srcdir"/$_modname-$pkgver/config
+}
+
+build() {
+    cd "$srcdir"/nginx-$_nginxver
+    CFLAGS=-I../$_modname-$pkgver/src ./configure --with-compat --with-threads --add-dynamic-module=../$_modname-$pkgver
+    make modules
+}
+
+package() {
+    install -Dm644 "$srcdir"/$_modname-$pkgver/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+    install -Dm644 "$srcdir"/$_modname-$pkgver/src/ngx_link_func_module.h "$pkgdir"/usr/include/ngx_link_func_module.h
+
+    install -Dm755 "$srcdir"/nginx-$_nginxver/objs/ngx_http_link_func_module.so "$pkgdir"/usr/lib/nginx/modules/ngx_http_link_func_module.so
+}
